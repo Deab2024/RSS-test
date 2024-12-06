@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSS Läsare</title>
+    <style>
+        body {
+            background-color: black; /* Svart bakgrund */
+            color: white;           /* Vit text */
+            font-family: Arial, sans-serif; /* Typsnitt Arial */
+            font-size: 90px;       /* Rekommenderad textstorlek */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 100vh;
+        }
+        #rssFeed {
+            max-width: 90%; /* Låt texten använda hela bredden */
+            padding: 0 30px; /* Rum från skärmens kanter */
+            line-height: 1.1; /* Kompakt men läsbart radavstånd */
+            box-sizing: border-box; /* Inkludera padding i bredd */
+        }
+    </style>
+</head>
+<body>
+
+<div id="rssFeed">Laddar evenemang...</div>
+
+<script>
+    const rssUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://visiteskilstuna.se/rest-api/rssService/getRssFeed?portletId=12.5b899160171ac5273c72ad9f&pageId=2.369be3c31580a19562d1977e');
+
+    let events = []; // Lagrar alla evenemang
+    let currentEventIndex = 0; // Index för aktuellt evenemang
+    let eventTimeout; // Variabel för att lagra setTimeout
+
+    // Funktion för att hämta och visa RSS-flödet
+    async function fetchRSS() {
+        const rssFeed = document.getElementById("rssFeed");
+        try {
+            const response = await fetch(rssUrl);
+            if (!response.ok) {
+                throw new Error('Kunde inte hämta RSS-flödet');
+            }
+
+            const data = await response.json();
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+
+            const items = xmlDoc.getElementsByTagName("item");
+            if (items.length === 0) {
+                rssFeed.textContent = 'Inga evenemang hittades.';
+                return;
+            }
+
+            // Spara titlarna för alla evenemang
+            events = [];
+            for (let i = 0; i < items.length; i++) {
+                const title = items[i].getElementsByTagName("title")[0]?.textContent || 'Okänt evenemang';
+                events.push(title);
+            }
+
+            // Starta visning av evenemang
+            currentEventIndex = 0;
+            clearTimeout(eventTimeout); // Rensa tidigare timeout
+            showNextEvent();
+
+        } catch (error) {
+            console.error('Fel vid hämtning av RSS-flödet:', error);
+            rssFeed.textContent = 'Kunde inte hämta evenemang.';
+        }
+    }
+
+    // Funktion för att visa nästa evenemang
+    function showNextEvent() {
+        const rssFeed = document.getElementById("rssFeed");
+        if (events.length > 0) {
+            rssFeed.textContent = events[currentEventIndex];
+            currentEventIndex = (currentEventIndex + 1) % events.length; // Går till nästa, loopar om vid slut
+        } else {
+            rssFeed.textContent = 'Inga evenemang hittades.';
+        }
+
+        // Ställ in timeout för nästa evenemang
+        eventTimeout = setTimeout(showNextEvent, 10000); // 10 sekunder
+    }
+
+    // Kör funktionen för att hämta RSS-flödet initialt
+    fetchRSS();
+
+    // Uppdatera RSS-flödet var 1 minut (60000 ms)
+    setInterval(fetchRSS, 60000);
+</script>
+
+</body>
+</html>
