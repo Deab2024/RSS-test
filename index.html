@@ -72,7 +72,7 @@
 
     async function fetchRSS() {
         try {
-            const timestamp = new Date().getTime(); // Cache-bypass
+            const timestamp = new Date().getTime(); // För att undvika cache
             const rssUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(baseRssUrl) + `&t=${timestamp}`;
 
             const response = await fetchRSSWithTimeout(rssUrl);
@@ -92,7 +92,7 @@
                 const pubDateStr = items[i].getElementsByTagName("pubDate")[0]?.textContent || '';
                 const pubDate = new Date(pubDateStr);
 
-                if (pubDate < midnight) continue; // Hoppa över gamla evenemang
+                if (pubDate < midnight) continue;
 
                 let title = items[i].getElementsByTagName("title")[0]?.textContent || '';
                 const formattedDate = formatDateRange(title);
