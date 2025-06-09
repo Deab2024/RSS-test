@@ -11,26 +11,26 @@
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      width: 100vw;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
       height: 100vh;
-      overflow: hidden;
-      position: relative;
     }
 
     #rssFeed {
-      position: absolute;
-      bottom: 30px;
-      right: 30px;
-      text-align: right;
-      max-width: 90vw;
+      max-width: 100%;
+      padding-left: 10px;
+      box-sizing: border-box;
+      line-height: 1.2;
     }
 
     .event-title {
-      font-size: 50px;
+      font-size: 30px;
       margin: 0;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      text-align: left;
     }
   </style>
 </head>
@@ -40,31 +40,19 @@
   </div>
 
   <script>
-    const baseRssUrl =
-      "https://visiteskilstuna.se/rest-api/rssService/getRssFeed?portletId=12.5b899160171ac5273c72ad9f&pageId=2.369be3c31580a19562d1977e";
+    const baseRssUrl = "https://visiteskilstuna.se/rest-api/rssService/getRssFeed?portletId=12.5b899160171ac5273c72ad9f&pageId=2.369be3c31580a19562d1977e";
 
     let events = [];
     let currentEventIndex = 0;
     let eventInterval;
 
     const monthMap = {
-      jan: 1,
-      feb: 2,
-      mar: 3,
-      apr: 4,
-      maj: 5,
-      jun: 6,
-      jul: 7,
-      aug: 8,
-      sep: 9,
-      okt: 10,
-      nov: 11,
-      dec: 12,
+      jan: 1, feb: 2, mar: 3, apr: 4, maj: 5, jun: 6,
+      jul: 7, aug: 8, sep: 9, okt: 10, nov: 11, dec: 12
     };
 
     function formatDateRange(title) {
-      const datePattern =
-        /^(\d{1,2})\s(\w{3})(?:\s?-\s?(\d{1,2})\s?(\w{3}))?/i;
+      const datePattern = /^(\d{1,2})\s(\w{3})(?:\s?-\s?(\d{1,2})\s?(\w{3}))?/i;
       const match = title.match(datePattern);
       if (match) {
         const startDay = parseInt(match[1], 10);
@@ -76,29 +64,23 @@
         }
         return `${startDay}/${startMonth}`;
       }
-      return "";
+      return '';
     }
 
     async function fetchRSSWithTimeout(url, timeout = 5000) {
       return Promise.race([
         fetch(url),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Timeout")), timeout)
-        ),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), timeout))
       ]);
     }
 
     async function fetchRSS() {
       try {
         const timestamp = new Date().getTime(); // cache-bypass
-        const rssUrl =
-          "https://api.allorigins.win/get?url=" +
-          encodeURIComponent(baseRssUrl) +
-          `&t=${timestamp}`;
+        const rssUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(baseRssUrl) + `&t=${timestamp}`;
 
         const response = await fetchRSSWithTimeout(rssUrl);
-        if (!response.ok)
-          throw new Error("Kunde inte hämta RSS-flödet.");
+        if (!response.ok) throw new Error("Kunde inte hämta RSS-flödet.");
 
         const data = await response.json();
         const parser = new DOMParser();
@@ -111,23 +93,15 @@
         midnight.setHours(0, 0, 0, 0);
 
         for (let i = 0; i < items.length; i++) {
-          const pubDateStr =
-            items[i].getElementsByTagName("pubDate")[0]?.textContent || "";
+          const pubDateStr = items[i].getElementsByTagName("pubDate")[0]?.textContent || '';
           const pubDate = new Date(pubDateStr);
 
           if (pubDate < midnight) continue;
 
-          let title =
-            items[i].getElementsByTagName("title")[0]?.textContent || "";
+          let title = items[i].getElementsByTagName("title")[0]?.textContent || '';
           const formattedDate = formatDateRange(title);
 
-          title = title
-            .replace(
-              /^(\d{1,2}\s\w{3}(?:\s?-\s?\d{1,2}\s?\w{3})?)\s*/,
-              ""
-            )
-            .replace(/^,/, "")
-            .trim();
+          title = title.replace(/^(\d{1,2}\s\w{3}(?:\s?-\s?\d{1,2}\s?\w{3})?)\s*/, '').replace(/^,/, '').trim();
           const displayTitle = `${formattedDate} ${title}`.trim();
 
           events.push({ title: displayTitle });
@@ -137,6 +111,7 @@
           showNextEvent();
           eventInterval = setInterval(showNextEvent, 10000);
         }
+
       } catch (error) {
         console.error(error);
         resetToWelcomeMessage();
