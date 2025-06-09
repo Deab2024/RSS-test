@@ -31,8 +31,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
       text-align: left;
-      transform: scale(2);
-      transform-origin: left center;
     }
   </style>
 </head>
@@ -78,7 +76,7 @@
 
     async function fetchRSS() {
       try {
-        const timestamp = new Date().getTime(); // cache-bypass
+        const timestamp = new Date().getTime();
         const rssUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(baseRssUrl) + `&t=${timestamp}`;
 
         const response = await fetchRSSWithTimeout(rssUrl);
